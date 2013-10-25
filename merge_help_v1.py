@@ -80,7 +80,7 @@ raw_input("Go ahead and push mozilla-central...and continue to mozilla-aurora to
 ##tag mozilla-aurora, close & tag mozilla-beta
 raw_input("Tagging mozilla-aurora, hit return to continue")
 mozilla_aurora_tag = "FIREFOX_BETA_"+aurora_version+"_BASE"
-#call('hg -R '+ mozilla_aurora +' tag '+ mozilla_aurora_tag  + ' -m "Tagging for mozilla-aurora->mozilla-beta uplift CLOSED TREE DONTBUILD" ', shell=True)
+call('hg -R '+ mozilla_aurora +' tag '+ mozilla_aurora_tag  + ' -m "Tagging for mozilla-aurora->mozilla-beta uplift CLOSED TREE DONTBUILD" ', shell=True)
 call('hg out -R '+ mozilla_aurora , shell=True)
 mozilla_beta_rev = subprocess.check_output('hg id -R %s -i -r default' % mozilla_beta, shell=True)
 raw_input("review and push..")
