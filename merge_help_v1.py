@@ -6,6 +6,7 @@ import urllib2
 import os
 import re
 import sys
+import subprocess
 from subprocess import call
 
 def getTemplateValue(url):
@@ -79,8 +80,9 @@ raw_input("Go ahead and push mozilla-central...and continue to mozilla-aurora to
 ##tag mozilla-aurora, close & tag mozilla-beta
 raw_input("Tagging mozilla-aurora, hit return to continue")
 mozilla_aurora_tag = "FIREFOX_BETA_"+aurora_version+"_BASE"
-call('hg -R '+ mozilla_aurora +' tag '+ mozilla_aurora_tag  + ' -m "Tagging for mozilla-aurora->mozilla-beta uplift CLOSED TREE DONTBUILD" ', shell=True)
+#call('hg -R '+ mozilla_aurora +' tag '+ mozilla_aurora_tag  + ' -m "Tagging for mozilla-aurora->mozilla-beta uplift CLOSED TREE DONTBUILD" ', shell=True)
 call('hg out -R '+ mozilla_aurora , shell=True)
+mozilla_beta_rev = subprocess.check_output('hg id -R %s -i -r default' % mozilla_beta, shell=True)
 raw_input("review and push..")
 
 
@@ -93,7 +95,12 @@ raw_input("review and push..")
 
 #### Pull from Aurora into Beta ###
 print mozilla_aurora_tag
-call('hg -R'+ mozilla_beta +' pull -u -r '+ mozilla_aurora_tag +' http://hg.mozilla.org/releases/mozilla-aurora', shell=True)
+#call('hg -R'+ mozilla_beta +' pull -u -r '+ mozilla_aurora_tag +' http://hg.mozilla.org/releases/mozilla-aurora', shell=True)
+call('hg -R'+ mozilla_beta +' pull -r '+ mozilla_aurora_tag +' http://hg.mozilla.org/releases/mozilla-aurora', shell=True)
+call('hg -R'+ mozilla_beta +' up -C', shell=True)
+mozilla_aurora_rev = subprocess.check_output('hg id -R %s -i -r default' % mozilla_beta, shell=True)
+call('hg -R %s hgdebugsetparents %s %s' % (mozilla_beta, mozilla_aurora_rev, mozilla_beta_rev), shell=True)
+call('hg -R %s commit -m "Merging old head via |hg debugsetparents %s %s|. CLOSED TREE DONTBUILD"' % (mozilla_beta, mozilla_aurora_rev, mozilla_beta_rev), shell=True)
 raw_input("> you have finished pulling aurora into mozilla_beta (hit 'return' to proceed to next step : version bump) <")
 
 ## version bump
@@ -137,13 +144,19 @@ raw_input("continue to the wiki to do the L10n changes+commits and do the final 
 # mozilla-aurora
 print("Tagging mozilla-aurora...")
 mozilla_aurora_old_tag = "FIREFOX_AURORA_"+aurora_version+"_END"
-call('hg tag -R'+ mozilla_aurora +' -m "Tagging for mozilla-central->mozilla-aurora uplift CLOSED TREE" '+ mozilla_aurora_old_tag , shell=True)
+#call('hg tag -R'+ mozilla_aurora +' -m "Tagging for mozilla-central->mozilla-aurora uplift CLOSED TREE" '+ mozilla_aurora_old_tag , shell=True)
 call('hg -R '+ mozilla_aurora +' commit --close-branch -m "closing old head CLOSED TREE DONTBUILD" ', shell=True)
 call('hg out -R'+ mozilla_aurora , shell=True)
+mozilla_aurora_rev = subprocess.check_output('hg id -R %s -i -r default' % mozilla_aurora, shell=True)
 raw_input("Review and do a push of mozilla-aurora")
 raw_input("hit enter to Pull from m-c into Aurora ")
 print mozilla_central_tag
-call('hg -R '+ mozilla_aurora +' pull -u -r ' + mozilla_central_tag + ' http://hg.mozilla.org/mozilla-central ',shell=True)
+#call('hg -R '+ mozilla_aurora +' pull -u -r ' + mozilla_central_tag + ' http://hg.mozilla.org/mozilla-central ',shell=True)
+call('hg -R '+ mozilla_aurora +' pull -r ' + mozilla_central_tag + ' http://hg.mozilla.org/mozilla-central ',shell=True)
+call('hg -R'+ mozilla_aurora +' up -C', shell=True)
+mozilla_central_rev = subprocess.check_output('hg id -R %s -i -r default' % mozilla_aurora, shell=True)
+call('hg -R %s hgdebugsetparents %s %s' % (mozilla_aurora, mozilla_central_rev, mozilla_aurora_rev), shell=True)
+call('hg -R %s commit -m "Merging old head via |hg debugsetparents %s %s|. CLOSED TREE DONTBUILD"' % (mozilla_aurora, mozilla_central_rev, mozilla_aurora_rev), shell=True)
 
 raw_input("> version-bump mozilla-aurora (hit 'return' to proceed) <")
 
