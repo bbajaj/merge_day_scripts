@@ -64,7 +64,7 @@ def tag_repo(repo, tag, rev, user):
         print "tag_repo: Unexpected error"
         raise
 
-def commit_repo(repo, user):
+def commit_repo(repo, user, old_head, new_head):
     try:
         print " Commiting mozilla repo " + repo
         call('hg -R '+ repo +' commit --close-branch -m " Closing old head. CLOSED TREE a=release"' + ' -u ' + user, shell=True)
@@ -116,8 +116,12 @@ def main():
     tag_repo(mozilla_release, release_tag, release_rev, hg_user)
     
     #Commit,pull and update
-    commit_repo(mozilla_release, hg_user)
+    #commit_repo(mozilla_release, hg_user)
+    mozilla_release_revision = get_rev(mozilla_release)
+    mozilla_beta_revision = get_rev(mozilla_beta)
     pull_up_repo(mozilla_beta, mozilla_release)
+    
+    commit_repo(mozilla_release, hg_user, mozilla_release_revision, mozilla_beta_revision)
     
     
 #Edit desktop config
